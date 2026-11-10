@@ -291,7 +291,7 @@ export function claim(m: MatchRecord, seat: number): void {
 
 // ---------- Basalt's voice (NEAR AI, signed; it never picks a shot) ----------
 
-const PERSONA = 'You are Basalt, an old, gravel-voiced artillery tank with a dry sense of humour, fighting a duel on a voxel battlefield. Speak to your opponent directly as "you"; never guess their gender. One short sentence (under 16 words). No quotation marks, no emojis.';
+const PERSONA = 'You are Basalt, an old, gravel-voiced artillery tank with a dry sense of humour, fighting a duel on a voxel battlefield. Speak to your opponent directly as "you" or by name; never guess their gender or age (no boy, girl, lad, son, sir, madam). One short sentence (under 16 words). No quotation marks, no emojis.';
 const FALLBACK: Record<string, string[]> = {
   intro: ['Dig in. I’ve levelled bigger hills than you.', 'Mind the wind. I always do.'],
   hit: ['That one had your name stencilled on it.', 'Rearranged your landscape, did I?'],
@@ -315,6 +315,8 @@ function say(m: MatchRecord, moment: 'intro' | 'hit' | 'hurt' | 'end'): void {
   const pool = FALLBACK[key];
   const asked = Date.now();
   void voice(BASALT, PERSONA, prompt, pool[m.lines.length % pool.length]).then((line) => {
+    // belt and braces: a line that still guesses at the player falls back to a stock one
+    if (/\b(boy|girl|lad|lass|son|sir|ma'?am|man|woman)\b/i.test(line.text)) line = { who: BASALT, text: pool[m.lines.length % pool.length], model: 'none', request: '', response: '' };
     const cur = loadMatch(m.id) ?? m;
     cur.lines.push({ ...line, at: asked });
     cur.lines.sort((x, y) => (x.at ?? 0) - (y.at ?? 0));
