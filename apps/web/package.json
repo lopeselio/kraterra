@@ -1,0 +1,30 @@
+{
+  "name": "@kraterra/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit -p . && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "echo 'web: covered by rules tests'"
+  },
+  "dependencies": {
+    "@better-auth/core": "1.7.18",
+    "@kraterra/rules": "workspace:*",
+    "better-auth": "1.7.18",
+    "better-near-auth": "1.10.2",
+    "near-kit": "0.14.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/three": "0.186.0",
+    "@vitejs/plugin-react": "6.2.1",
+    "vite": "8.3.4"
+  }
+}
