@@ -79,7 +79,10 @@ export class Battlefield {
   private gen = 0;
 
   constructor(private host: HTMLElement) {
-    this.renderer = new THREE.WebGLRenderer({ antialias: window.devicePixelRatio < 2, powerPreference: 'high-performance' });
+    // ?capture keeps the drawing buffer so frames can be read back (thumbnail and trailer capture)
+    const capture = new URLSearchParams(location.search).has('capture');
+    this.renderer = new THREE.WebGLRenderer({ antialias: window.devicePixelRatio < 2, powerPreference: 'high-performance', preserveDrawingBuffer: capture });
+    if (capture) (window as unknown as { __bf: Battlefield }).__bf = this;
     // capped pixel ratio: crisp on desktop, cheap on phones
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, matchMedia('(pointer: coarse)').matches ? 1.5 : 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
