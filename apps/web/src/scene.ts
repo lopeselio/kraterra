@@ -522,7 +522,7 @@ export class Battlefield {
   /** frame the whole field (wide screens) or the two tanks (narrow) */
   overview(lift = 0): void {
     const aspect = this.host.clientWidth / Math.max(1, this.host.clientHeight);
-    this.want = { x: W / 2, y: (aspect < 1 ? 40 : 36) - lift, width: aspect < 1 ? Math.max(120, W * 0.72) : W * 1.04 };
+    this.want = { x: W / 2, y: (aspect < 1 ? 26 : 36) - lift, width: aspect < 1 ? Math.max(120, W * 0.72) : W * 1.04 };
     this.userCam = 0;
   }
 
