@@ -185,6 +185,13 @@ function driveTank(s: State, seat: number, move: number, ev: SimEvent[]): void {
   ev.push({ t: 'move', seat, pts });
 }
 
+/** Where a tank would end up after driving `move` columns (nothing changes; for the aiming preview). */
+export function previewDrive(s: State, seat: number, move: number): { x: number; y: number } {
+  const c = { ...s, tanks: s.tanks.map((t) => ({ ...t })) };
+  if (move) driveTank(c, seat, Math.max(-c.tanks[seat].fuel, Math.min(c.tanks[seat].fuel, move)), []);
+  return { x: c.tanks[seat].x, y: c.tanks[seat].y };
+}
+
 function settleTanks(s: State, ev: SimEvent[]): void {
   s.tanks.forEach((t, seat) => {
     const from = t.y;
