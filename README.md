@@ -6,6 +6,8 @@ Nobody can rig the battlefield: our server commits a hash of a secret salt oncha
 
 Built for NEAR HACKATHON (Nov 2026). Tracks: **Games With Real Economies**, **NFTs That Do Something**. Design: [DESIGN.md](DESIGN.md). Source: https://github.com/lopeselio/kraterra
 
+**Play it:** https://kraterra.orangehill-dc994ea2.northeurope.azurecontainerapps.io (NEAR testnet; phones and desktops; guests welcome).
+
 - Contract (testnet): [`kraterra.testnet`](https://testnet.nearblocks.io/address/kraterra.testnet): matches (commit, VRF draw, move log, settlement) and munition packs (NEP-171).
 - Referee: [`kraterra-ref.testnet`](https://testnet.nearblocks.io/address/kraterra-ref.testnet). Gasless relayer: [`kraterra-relay.testnet`](https://testnet.nearblocks.io/address/kraterra-relay.testnet).
 - Basalt, the AI tank: [`basalt.kraterra.testnet`](https://testnet.nearblocks.io/address/basalt.kraterra.testnet), a sub-account with **only a function-call key** (`play`, `mint_starter`). It signs its own moves.
@@ -39,52 +41,59 @@ With no NEAR keys, run `CHAIN=0 pnpm start`: everything plays the same, but noth
 10. **Sign in with NEAR** (top right; NEAR Connect: Meteor, Intear, HOT, MyNearWallet, …). The wallet signs "Sign in to <host>" (NEP-413). In *Munition packs*, **Claim your starter pack (free, gasless)**: a NEP-366 meta-transaction paid by `kraterra-relay.testnet` mints an NFT pack (Starfall, Tidebreaker or Auger, picked by the block's VRF) shown as its onchain SVG crate. Its munition now appears in your drafts; the contract checks you still own the pack when the match is created. Your record (duels, wins, best score, damage) is kept onchain.
 11. **Headless:** `pnpm e2e` (server at http://localhost:8841) creates a faucet account, signs in, claims a starter pack gaslessly, duels Basalt on Normal over HTTP (drafting the pack munition), waits for every move and the settlement onchain, and compares the contract's record.
 
-### A live run (testnet, 10 Nov 2026)
+### A live run (hosted, testnet, 10 Nov 2026)
 
-`pnpm e2e` (excerpt):
+`pnpm e2e https://kraterra.orangehill-dc994ea2.northeurope.azurecontainerapps.io` (the faucet was rate-limiting, so the test account is a funded sub-account; the 40 `play` lines are left out):
 
 ```
+▶ sign in: Better Auth + better-near-auth (the wallet signs "Sign in to <host>")
+  ✓ session cookie set; the server sees e2e-mwagm9c7.kraterra.testnet
+
 ▶ claim a starter munition pack, gasless (NEP-366 meta-transaction through the relayer)
+  ✓ mint_starter AxMraLv8zfFqCYEL3tAJtiGiyefGXQXXw1RpEgNZn3DU
+  ✓ pack-2: “Auger pack” (kind picked by the block's VRF), owned by e2e-mwagm9c7.kraterra.testnet
+
 ▶ duel Basalt on Normal, drafting the pack munition
-  ✓ Basalt: “Ouch. Your aim is terrible, but the damage hurts.”
-  ✓ over: E2E Gunner 108 – 94 Basalt; you win
+  ✓ match em5cqa: salt hash 94b482ee4649bb9b… committed, then the contract drew VRF b291352117eb9a8d… in a later receipt
+  ✓ battlefield “valley”; you may draft 1 pack munition(s), Basalt 1
+  ✓ drafted Auger from the pack
+  ✓ Basalt: “That tickled. Now take this.”
+  ✓ over: E2E Gunner 144 – 54 Basalt; you win
 
 ▶ wait for every move and the settlement onchain
-  ✓ create_match (VRF draw)        https://testnet.nearblocks.io/txns/8SHuzUMj4GtRmdMRGGM7kz6Qn1rphjfdif4oSZfdztoE
-  ✓ play ×1                        https://testnet.nearblocks.io/txns/DydsXj8uafSKMYoDDKuTAcYQWoRJBAfw54jc6fC8MWGC
-  ✓ play ×1 (signed by Basalt)     https://testnet.nearblocks.io/txns/Kn6adDpSjd3h9t7uahs5PnvehNTiArNeW8PbbU2i6mE
-  … 38 more play transactions …
-  ✓ settle (salt revealed)         https://testnet.nearblocks.io/txns/EzEaUgB4MJeVgKsNfsxmXCV4hVNWdfUxEaSbBJiv18w5
-  ✓ contract: settled, 40 moves, scores 108 – 94, winner seat 0, seed b063fc21b4bcd50f…
-  ✓ your record onchain: 1 match, 1 win(s), 108 damage
-
-all player steps passed. Check the match yourself:
-  pnpm verify 4fgnan
+  ✓ create_match (VRF draw)        https://testnet.nearblocks.io/txns/3fvUhB4MHLXntVMLft5iz8t1tZD3HydYsajUU2ZMS1JK
+  ✓ play ×1 (signed by Basalt)     https://testnet.nearblocks.io/txns/FjKqFkp2xP94yYcjyDprkYA9M4j3h7F5rmHv7WUBtZ6q
+  … 39 more play transactions …
+  ✓ settle (salt revealed)         https://testnet.nearblocks.io/txns/8RPkjnsEZas39CLG3mXwY3W5NEVophXJJbLBb4F9LKja
+  ✓ contract: settled, 40 moves, scores 144 – 54, winner seat 0, seed e11f1e0acc4614af…
+  ✓ your record onchain: 1 match, 1 win(s), 144 damage
 ```
 
-`pnpm verify 4fgnan`:
+`pnpm verify em5cqa --host https://kraterra.orangehill-dc994ea2.northeurope.azurecontainerapps.io`:
 
 ```
-match 4fgnan on kraterra.testnet: E2E Gunner vs Basalt (vs Basalt on normal)
+match em5cqa on kraterra.testnet: E2E Gunner vs Basalt (vs Basalt on normal)
 
 ✓ the contract has this match
 ✓ the contract closed it (settled)
-✓ the revealed salt matches the hash committed at create_match  85241fb86c85c87f
-✓ the VRF value is the one the contract drew from the block (after the commit)  edf936a1f3c6cb9e
-✓ seed = sha256(vrf | salt), as the contract computed it  b063fc21b4bcd50f
-✓ the weapon pool redraws from that seed exactly as the contract drew it  Seedpod, Bulwark, Skimmer, Pebble…
-✓ each seat drafted only from the packs the contract saw it own  Tidebreaker / Starfall
+✓ the revealed salt matches the hash committed at create_match  94b482ee4649bb9b
+✓ the VRF value is the one the contract drew from the block (after the commit)  b291352117eb9a8d
+✓ seed = sha256(vrf | salt), as the contract computed it  e11f1e0acc4614af
+✓ the weapon pool redraws from that seed exactly as the contract drew it  Trident, Thumper, Pebble, Pebble…
+✓ each seat drafted only from the packs the contract saw it own  Auger / Starfall
 ✓ the move log is the one recorded onchain, move by move (40 moves)
 ✓ every pick and shot is legal (turn order, pool, slots, angles, power, fuel)
-  battlefield: Archipelago, water at 20
-✓ the replay scores 108 – 94, the same as the contract recorded
+  battlefield: Deep Valley, water at 12
+✓ the replay scores 144 – 54, the same as the contract recorded
 ✓ winner: E2E Gunner
-✓ the replay ends in the exact state the server ended in  c22c0999216ab1e4
+✓ the replay ends in the exact state the server ended in  33d422727beeff13
 
 6 line(s) from Basalt, 6 signed by the NEAR AI enclave (taunts only: the AI's shots come from packages/rules)
 
 all checks passed
 ```
+
+An earlier local run, `pnpm verify 4fgnan` (Archipelago, 108 – 94), passes the same checks.
 
 ## How it works
 
@@ -129,7 +138,7 @@ pnpm sim 20 hard easy                # all-AI balance: wins per difficulty, mean
 
 - **Contract:** `pnpm contract:build`, then `near contract deploy kraterra.testnet use-file contracts/kraterra/target/near/kraterra.wasm with-init-call new json-args '{"owner":"kraterra.testnet","referee":"kraterra-ref.testnet"}' prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' network-config testnet sign-with-legacy-keychain send` (later redeploys: `without-init-call`).
 - **Basalt:** `pnpm setup:ai` (idempotent) creates `basalt.kraterra.testnet` with a function-call key for `play` and `mint_starter` and claims its starter pack.
-- **Hosting:** `scripts/deploy-azure.sh` (Azure Container Apps, resource group `kraterra`, one replica). `scripts/azure-storage.sh` mounts an Azure Files share at `/data` once, so match records survive redeploys. Keys go in as one `NEAR_KEYS` secret; nothing is in the repo.
+- **Hosting:** `scripts/deploy-azure.sh` (Azure Container Apps, resource group `kraterra`, one replica), then `scripts/azure-storage.sh` once to mount an Azure Files share at `/data` (the first revision waits for it), then `SKIP_SETUP=1 scripts/deploy-azure.sh` so wallet sign-in uses the app's own hostname. Match records survive redeploys. Keys go in as one `NEAR_KEYS` secret; nothing is in the repo.
 
 ## Lineage and disclosures
 
