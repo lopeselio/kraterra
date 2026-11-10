@@ -1,0 +1,28 @@
+{
+  "name": "kraterra",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "pnpm@11.26.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter ./apps/* dev",
+    "build": "pnpm --filter @kraterra/web build",
+    "start": "pnpm --filter @kraterra/server start",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "sim": "pnpm --filter @kraterra/rules sim",
+    "verify": "pnpm --filter @kraterra/server verify",
+    "e2e": "pnpm --filter @kraterra/server e2e",
+    "contract:test": "cd contracts/kraterra && cargo test --locked",
+    "contract:build": "cd contracts/kraterra && cargo near build non-reproducible-wasm --locked",
+    "setup:ai": "pnpm --filter @kraterra/server setup:ai"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "3.2.7",
+    "tsx": "4.20.6"
+  }
+}

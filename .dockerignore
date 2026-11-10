@@ -1,0 +1,7 @@
+node_modules
+**/node_modules
+**/dist
+contracts/kraterra/target
+data
+.env
+.git
