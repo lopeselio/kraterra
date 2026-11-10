@@ -87,7 +87,7 @@ export function Match({ id, bf, onHome, onRematch }: { id: string; bf: Battlefie
     setAim({ angle: t.angle, power: t.power, move: 0, slot });
     sfx('turn');
     const dir = s.tanks[1 - me].x > t.x ? 1 : -1;
-    if (window.innerWidth < window.innerHeight) bf.focusOn(t.x + dir * 30, t.y + 18);
+    if (window.innerWidth < window.innerHeight) bf.focusOn(t.x + dir * 34, t.y + 2, 124);
   }, [turnKey, myTurn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { if (s) windLevel(Math.abs(s.wind) / 10); }, [s]);
