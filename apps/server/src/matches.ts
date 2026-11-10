@@ -169,18 +169,20 @@ export function joinMatch(m: MatchRecord, name: unknown, account: string | null)
 async function start(m: MatchRecord): Promise<void> {
   m.phase = 'drawing';
   touch(m);
-  for (const s of m.seats) {
-    if (!s) continue;
-    const p = await packsOf(s.account);
+  await Promise.all(m.seats.map(async (s) => {
+    if (!s) return;
+    const p = await Promise.race([packsOf(s.account), new Promise<{ packs: string[]; kinds: number[] }>((res) => setTimeout(() => res({ packs: [], kinds: [] }), 8000))]);
     s.packs = p.packs; s.kinds = p.kinds;
-  }
+  }));
   let vrf: string | null = null;
   if (m.chain.on) {
     try {
-      const r = await call<string>(config.referee, 'create_match', {
+      const draw = call<string>(config.referee, 'create_match', {
         match_id: m.id, salt_hash: m.saltHash, mode: m.mode === 'ai' ? `ai-${m.difficulty}` : 'friend',
         seats: m.seats.map((s) => ({ name: s!.name, account: s!.account ?? null, packs: s!.packs })),
       }, 60);
+      // nobody waits more than 45 s for the draw: past that the match plays from a local draw, flagged
+      const r = await Promise.race([draw, new Promise<never>((_, rej) => setTimeout(() => rej(new Error('the VRF draw timed out (RPCs busy)')), 45_000))]);
       m.chain.txs.push({ what: 'create_match (VRF draw)', hash: r.tx });
       m.chain.created = true;
       if (typeof r.value === 'string' && /^[0-9a-f]{64}$/.test(r.value)) vrf = r.value;
