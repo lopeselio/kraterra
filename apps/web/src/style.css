@@ -211,6 +211,8 @@ input[type=range] { flex: 1; min-width: 40px; accent-color: var(--gold); height:
   .slider-row { flex: 1; }
   .top-hud { top: calc(48px + var(--safe-t)); }
   .bubble, .coach { top: calc(112px + var(--safe-t)); }
+  .bubble { right: 10px; left: auto; max-width: calc(100% - 92px); font-size: 13px; }
+  .resign { bottom: auto; top: calc(112px + var(--safe-t)); left: calc(10px + var(--safe-l)); }
   .coach p { font-size: 13px; }
   .wgrid { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
   .draft { max-height: 58%; }
@@ -219,7 +221,11 @@ input[type=range] { flex: 1; min-width: 40px; accent-color: var(--gold); height:
 }
 @media (max-height: 520px) and (orientation: landscape) {
   .aim-grid { grid-template-columns: 1fr 1.3fr 1.3fr 1.1fr auto; padding: 6px; }
-  .top-hud { top: calc(6px + var(--safe-t)); left: auto; right: 12px; transform: none; width: auto; }
-  .draft { max-height: calc(100% - 70px); }
-  .coach, .bubble { top: calc(60px + var(--safe-t)); }
+  .top-hud { top: calc(44px + var(--safe-t)); left: auto; right: calc(10px + var(--safe-r)); transform: none; width: auto; padding: 4px 10px; }
+  .coach { top: calc(44px + var(--safe-t)); left: calc(10px + var(--safe-l)); transform: none; width: min(380px, 48%); padding: 8px 10px; }
+  .coach p { font-size: 12px; margin: 2px 0 4px; }
+  .bubble { top: calc(100px + var(--safe-t)); }
+  .draft { max-height: calc(100% - 60px); }
+  .hero { padding: 2vh 0 10vh; }
+  .center { max-height: calc(100% - 60px); top: calc(50% + 20px); }
 }
