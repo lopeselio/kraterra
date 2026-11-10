@@ -122,6 +122,7 @@ export class Battlefield {
       const t = this.tankModel(SEAT_COLOR[s]);
       this.tanks.push(t);
       this.barrels.push(t.getObjectByName('pivot')!);
+      t.visible = false; // until there's a battlefield to stand on
       this.scene.add(t);
     }
     this.ghostTank = this.tankModel(0xffffff, true);
@@ -243,6 +244,7 @@ export class Battlefield {
 
   setTanks(s: State): void {
     s.tanks.forEach((t, i) => {
+      this.tanks[i].visible = true;
       this.tankPos[i] = { x: t.x, y: t.y };
       this.tanks[i].position.set(t.x + 0.5, t.y, 0);
       this.setBarrel(i, t.angle);
