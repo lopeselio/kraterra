@@ -506,7 +506,7 @@ export class Battlefield {
     const c = document.createElement('canvas');
     c.width = 256; c.height = 96;
     const g = c.getContext('2d')!;
-    g.font = '900 64px "Pixelify Sans", system-ui';
+    g.font = '900 64px Inter, system-ui'; // hit numbers: Pixelify's 5 reads as an 8
     g.textAlign = 'center'; g.textBaseline = 'middle';
     g.lineWidth = 10; g.strokeStyle = 'rgba(20,12,8,.9)'; g.strokeText(text, 128, 48);
     g.fillStyle = color; g.fillText(text, 128, 48);
