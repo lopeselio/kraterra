@@ -249,3 +249,5 @@ input[type=range] { flex: 1; min-width: 40px; accent-color: var(--gold); height:
 .give { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
 .give label { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .give p { flex-basis: 100%; margin: 2px 0; }
+
+.slider-note { font-style: normal; opacity: .8; }
