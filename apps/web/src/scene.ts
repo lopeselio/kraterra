@@ -70,6 +70,8 @@ export class Battlefield {
   private want = { x: W / 2, y: 36, width: W * 1.04 };
   private follow: { x: number; y: number } | null = null;
   private userCam = 0;
+  /** the lift of the current overview framing, or null once the camera has gone somewhere else */
+  private wide: number | null = null;
   /** which seat the local player is (barrel drag), or null */
   me: number | null = null;
   onAim: ((a: AimDrag) => void) | null = null;
@@ -523,12 +525,27 @@ export class Battlefield {
     if (Date.now() - this.userCam < 4000) return;
     this.want.x = x; this.want.y = y;
     if (width) this.want.width = width;
+    this.wide = null;
   }
   /** frame the whole field (wide screens) or the two tanks (narrow) */
   overview(lift = 0): void {
-    const aspect = this.host.clientWidth / Math.max(1, this.host.clientHeight);
-    this.want = { x: W / 2, y: (aspect < 1 ? 26 : 36) - lift, width: aspect < 1 ? Math.max(120, W * 0.72) : W * 1.04 };
+    const h = Math.max(1, this.host.clientHeight);
+    const aspect = this.host.clientWidth / h;
+    let y = (aspect < 1 ? 26 : 36) - lift;
+    let width = aspect < 1 ? Math.max(120, W * 0.72) : W * 1.04;
+    if (aspect > 1 && h < 520) {
+      // a short landscape screen (a phone on its side): the score bar and the aiming dock cover the top and
+      // bottom of the picture, so widen and shift the view until both tanks sit in the band between them
+      const top = 100 / h, bottom = 124 / h;
+      const hi = Math.max(this.tankPos[0].y, this.tankPos[1].y) + 9, lo = Math.min(this.tankPos[0].y, this.tankPos[1].y) - 3;
+      const band = Math.max(0.25, 1 - top - bottom);
+      width = Math.min(W * 1.7, Math.max(width, ((hi - lo) / band) * aspect));
+      const tall = width / aspect;
+      y = Math.max(hi - tall * (0.5 - top), Math.min(lo + tall * (0.5 - bottom), y));
+    }
+    this.want = { x: W / 2, y, width };
     this.userCam = 0;
+    this.wide = lift;
   }
 
   private resize = (): void => {
@@ -536,6 +553,7 @@ export class Battlefield {
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / Math.max(1, h);
     this.camera.updateProjectionMatrix();
+    if (this.wide !== null) this.overview(this.wide); // the phone was turned: frame the field again
   };
 
   /** screen point to the slab's front plane */
@@ -584,7 +602,7 @@ export class Battlefield {
         const d = Math.hypot(a.x - b.x, a.y - b.y);
         if (pinch > 0) this.zoom(pinch / d);
         pinch = d;
-        this.userCam = Date.now();
+        this.userCam = Date.now(); this.wide = null;
         return;
       }
       if (mode === 'aim') { aimFrom(e.clientX, e.clientY); return; }
@@ -593,14 +611,14 @@ export class Battlefield {
         this.want.x -= (e.clientX - last.x) * s;
         this.want.y += (e.clientY - last.y) * s;
         this.view.x = this.want.x; this.view.y = this.want.y;
-        this.userCam = Date.now();
+        this.userCam = Date.now(); this.wide = null;
       }
       last = { x: e.clientX, y: e.clientY };
     });
     const up = (e: PointerEvent): void => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = 0; if (!pointers.size) mode = null; };
     el.addEventListener('pointerup', up);
     el.addEventListener('pointercancel', up);
-    el.addEventListener('wheel', (e) => { e.preventDefault(); this.zoom(e.deltaY > 0 ? 1.1 : 0.9); this.userCam = Date.now(); }, { passive: false });
+    el.addEventListener('wheel', (e) => { e.preventDefault(); this.zoom(e.deltaY > 0 ? 1.1 : 0.9); this.userCam = Date.now(); this.wide = null; }, { passive: false });
   }
 
   zoom(f: number): void {
