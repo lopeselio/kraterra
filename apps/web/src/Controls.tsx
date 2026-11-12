@@ -83,7 +83,7 @@ export function AimPanel(props: {
           <span><b>{cur !== undefined ? weapon(cur).name : '—'}</b><small>{inv.filter((_, i) => !used[i]).length} left · change ▴</small></span>
         </button>
         <Slider label="Angle" unit="°" value={aim.angle} min={0} max={180} reverse onChange={(v) => set({ angle: v })} onNudge={(d) => nudge('angle', -d)} disabled={busy}
-          note={aim.angle === 90 ? 'straight up' : aim.angle < 90 ? 'barrel right ▶' : '◀ barrel left'}
+          note={aim.angle === 90 ? '▲ up' : aim.angle < 90 ? 'right ▶' : '◀ left'}
           nudges={[['◀', 'Turn the barrel left (angle up 1°)'], ['▶', 'Turn the barrel right (angle down 1°)']]} />
         <Slider label="Power" unit="" value={aim.power} min={1} max={100} onChange={(v) => set({ power: v })} onNudge={(d) => nudge('power', d)} disabled={busy} />
         {props.allowMove !== false && (
