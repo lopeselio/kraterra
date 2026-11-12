@@ -240,7 +240,8 @@ input[type=range] { flex: 1; min-width: 40px; accent-color: var(--gold); height:
   .top-hud { top: calc(44px + var(--safe-t)); left: auto; right: calc(10px + var(--safe-r)); transform: none; width: auto; padding: 4px 10px; }
   .coach { top: calc(44px + var(--safe-t)); left: calc(10px + var(--safe-l)); transform: none; width: min(380px, 48%); padding: 8px 10px; }
   .coach p { font-size: 12px; margin: 2px 0 4px; }
-  .bubble { top: calc(100px + var(--safe-t)); }
+  /* Basalt's line sits in the top band beside the score bar, not over the far tank */
+  .bubble { top: calc(44px + var(--safe-t)); left: calc(10px + var(--safe-l)); right: auto; transform: none; max-width: min(400px, calc(100% - 430px)); font-size: 12px; padding: 6px 10px; }
   .draft { max-height: calc(100% - 60px); }
   .hero { padding: 2vh 0 10vh; }
   .center { max-height: calc(100% - 60px); top: calc(50% + 20px); }
@@ -250,4 +251,5 @@ input[type=range] { flex: 1; min-width: 40px; accent-color: var(--gold); height:
 .give label { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .give p { flex-basis: 100%; margin: 2px 0; }
 
-.slider-note { font-style: normal; opacity: .8; }
+.slider-note { font-style: normal; opacity: .8; white-space: nowrap; }
+.slider-top small { white-space: nowrap; }
