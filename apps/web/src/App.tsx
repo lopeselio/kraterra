@@ -43,7 +43,7 @@ export function App() {
 
   useEffect(() => {
     void api<ServerConfig>('/config').then((c) => { setCfg(c); setContract(c.contract); }).catch(() => undefined);
-    void api<Me>('/me').then((m) => setAccount(m.accountId)).catch(() => setAccount(null));
+    void api<Me>('/me').then((m) => setAccount(m.accountId ?? null)).catch(() => setAccount(null));
     const pop = (): void => setRoute(parse());
     window.addEventListener('popstate', pop);
     const key = (e: KeyboardEvent): void => {
@@ -173,7 +173,7 @@ function Title({ bf, cfg, account, onPlay, onFriend, onJoin, onPractice, onTour 
   const [claim, setClaim] = useState<{ busy: boolean; msg: string | null }>({ busy: false, msg: null });
   const fresh = !onboarded().walked;
 
-  const loadMe = useCallback(() => { if (account) void api<Me>('/me').then(setMe).catch(() => setMe(null)); else setMe(null); }, [account]);
+  const loadMe = useCallback(() => { if (account) void api<Me>('/me').then((m) => setMe(m.accountId ? m : null)).catch(() => setMe(null)); else setMe(null); }, [account]);
   useEffect(loadMe, [loadMe]);
   useEffect(() => {
     void api<typeof board>('/leaderboard').then(setBoard).catch(() => undefined);
