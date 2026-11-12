@@ -1,18 +1,31 @@
 # Kraterra
 
+> Part of the **NEAR Arcade** submission for NEAR HACKATHON ([arcade.lopeselio.online](https://arcade.lopeselio.online), [github.com/lopeselio/near-arcade](https://github.com/lopeselio/near-arcade)); the author's other submission is **Signalfire** ([github.com/lopeselio/signalfire](https://github.com/lopeselio/signalfire)).
+
+**Play it: https://kraterra.lopeselio.online** (NEAR testnet; phones and desktops; guests welcome, no wallet needed).
+
 A turn-based **artillery duel in destructible voxel ground**, on NEAR. Draft ten munitions from a shared pool, read the wind, and lob shells over hills that crater, tunnel, burn and wall up under fire. Duel **Basalt** the AI tank (Easy / Normal / Hard) or send a friend a room link.
 
 Nobody can rig the battlefield: our server commits a hash of a secret salt onchain first, then the contract draws a seed from **NEAR's block VRF** (`env::random_seed_array()`) in a later receipt. Terrain, weapon pool and wind come from both. Every pick and shot is recorded onchain; at the end the salt is revealed and the contract redraws the pool and checks the whole move log. `pnpm verify <matchId>` replays the duel from that log with no keys and compares the score. Rare munitions are **NFT packs** (NEP-171) you own in your wallet and draft into your matches.
 
-Built for NEAR HACKATHON (Nov 2026). Tracks: **Games With Real Economies**, **NFTs That Do Something**. Design: [DESIGN.md](DESIGN.md). Source: https://github.com/lopeselio/kraterra
-
-**Play it:** https://kraterra.orangehill-dc994ea2.northeurope.azurecontainerapps.io (NEAR testnet; phones and desktops; guests welcome).
+Built for NEAR HACKATHON (Nov 2026). Tracks: **NFTs That Do Something** (munition packs that change what you can fire) and **Games With Real Economies** (see *The economy, plainly* below). Design: [DESIGN.md](DESIGN.md). Source: https://github.com/lopeselio/kraterra
 
 - Contract (testnet): [`kraterra.testnet`](https://testnet.nearblocks.io/address/kraterra.testnet): matches (commit, VRF draw, move log, settlement) and munition packs (NEP-171).
 - Referee: [`kraterra-ref.testnet`](https://testnet.nearblocks.io/address/kraterra-ref.testnet). Gasless relayer: [`kraterra-relay.testnet`](https://testnet.nearblocks.io/address/kraterra-relay.testnet).
 - Basalt, the AI tank: [`basalt.kraterra.testnet`](https://testnet.nearblocks.io/address/basalt.kraterra.testnet), a sub-account with **only a function-call key** (`play`, `mint_starter`). It signs its own moves.
 
+### The economy, plainly
+
+Kraterra has **no token and no money flow**. Its economy is the munition packs (NEP-171 NFTs on `kraterra.testnet`):
+
+- **Scarce.** Each NEAR account gets **one** free starter pack; its kind (Starfall, Tidebreaker or Auger) is drawn by the block's VRF, not chosen. In the game, the other two kinds only come from other players.
+- **Useful.** A pack is the only way to draft its rare munition. `create_match` checks onchain that the seat's account owns the pack, and `settle` refuses a log that drafts a rare the seat didn't own.
+- **Tradeable.** Packs move with `nft_transfer`: **Give…** on the *Munition packs* panel sends one to another account from your wallet, and the munition goes with it (from their next duel they can draft it and you can't). Any NEP-171 wallet or marketplace can move them too.
+- **What's not there.** No pack is earned by winning, nothing is priced or sold by the game, and there's no royalty. Three packs exist today (Basalt's and two test accounts'); a gift or trade between two real players hasn't happened onchain yet.
+
 ## Try it (do X, see Y)
+
+On the hosted game, start at step 1 with https://kraterra.lopeselio.online. To run it yourself:
 
 ```bash
 pnpm install
@@ -22,28 +35,29 @@ pnpm start            # http://localhost:8841 (server + built web app)
 
 With no NEAR keys, run `CHAIN=0 pnpm start`: everything plays the same, but nothing is written onchain (the results say "Offline mode").
 
-1. **Open http://localhost:8841.** You see the KRATERRA title over a voxel diorama where two tanks trade shells by themselves (attract mode), then panels: name, **Duel Basalt** with an Easy/Normal/Hard switch, **Challenge a friend**, a room-code box, **Practice range**, **Munition packs**, the leaderboard and recent duels.
+1. **Open https://kraterra.lopeselio.online** (or http://localhost:8841). You see the KRATERRA title over a voxel diorama where two tanks trade shells by themselves (attract mode), then panels: name, **Duel Basalt** with an Easy/Normal/Hard switch, **Challenge a friend**, a room-code box, **Practice range**, **Munition packs**, the leaderboard and recent duels. *Recent duels* also reads the contract: how many duels from this site are **settled** (every move checked), resigned, or in play/abandoned, next to the contract's own counter of every duel ever **started** (development test runs included).
 2. **Press "Duel Basalt"** (Easy is the default). The first time, a **six-card illustrated walkthrough** opens (the duel; angle, power and wind; the draft; destructible ground; scoring; what goes onchain). Its last button, **Try the practice range**, takes you to step 3; **Skip** goes straight to the duel. Reopen it any time from **? How to play**.
 3. **Practice range.** A guided coach card: *1. Aim and fire* (drag from your tank or use the sliders, press FIRE or Space; a dotted aim guide shows the arc), *2. Hit the target* (the orange tank; you see "Hit! N damage."), *3. Mind the wind* (wind 6 ▶, no guide), *4. Free fire* with every common munition, then **Duel Basalt**. Everything runs in your browser on the real rules.
-4. **The duel starts with a VRF draw.** A card reads *Drawing the battlefield*: "Salt hash committed: `abcd1234…`", then "NEAR contract draws a VRF seed in a later block" with a link to the `create_match` transaction, then the battlefield appears (its theme is named in the top bar: Rolling Hills, Terraced Cliffs, Deep Valley, Archipelago or Sky Reef). Basalt greets you in a speech bubble (with a NEAR AI key: "✓ NEAR AI", a TEE-signed line).
-5. **Draft.** A sheet lists the 20-card pool. Tap a card on your turn ("Your pick"); Basalt picks in between; both 10-slot inventories fill below. **Pick for me** drafts for you. Signed in with packs, a *Your NFT packs* row shows your rare cards (glowing purple).
+4. **The duel starts with a VRF draw.** A card reads *Drawing the battlefield*: "Salt hash committed: `abcd1234…`", then "NEAR contract draws a VRF seed in a later block" with a link to the `create_match` transaction, then the battlefield appears. For the rest of the duel a chip in the top bar, **⛓ VRF b2913521 · N onchain**, links to that `create_match` transaction and counts the moves recorded so far (its theme is named in the top bar: Rolling Hills, Terraced Cliffs, Deep Valley, Archipelago or Sky Reef). Basalt greets you in a speech bubble (with a NEAR AI key: "✓ NEAR AI", a TEE-signed line).
+5. **Draft.** A sheet lists the 20-card pool. Tap a card on your turn ("Your pick"); Basalt picks in between; both 10-slot inventories fill below. **Draft for me** fills the rest of your hand (it picks on each of your turns until the draft ends; press again to stop). Signed in with packs, a *Your NFT packs* row shows your rare cards (glowing purple).
 6. **Battle.** Basalt fires first. On your turn the aiming dock appears: munition button (opens a sheet of your 10, used ones marked "fired"), **Angle** and **Power** sliders with − / + buttons, **◀ ▶** to plan a drive (a ghost tank shows where you'll stop; fuel bar), **FIRE**. Or drag from your tank (direction = angle, distance = power). Desktop: ←/→ angle, ↑/↓ power (Shift ×5), A/D drive, 1–0 munitions, Space fire; drag elsewhere to pan, wheel to zoom (pinch on phones). The top bar shows the score, "Shot n/20" and the wind (◀◀ 7 = strong wind to the left). Shells leave a trail; blasts flash, shake the camera, carve craters and scorch grass; hits float "-N"; tanks drop into craters; Bulwark raises a stone wall, Mudslinger packs dirt, Wildfire runs along the ground, Mole and Auger tunnel.
-7. **Results.** "Victory" / "Defeat" / "A draw" with the scores, then within a few seconds **"✓ Settled onchain: the contract checked the revealed salt, redrew the pool and checked all 40 moves."** **Show N transactions** lists `create_match (VRF draw)`, the `play` transactions (Basalt's are its own), and `settle (salt revealed)` on nearblocks. Below: the exact `pnpm verify <id>` command and a **proof bundle (JSON)** link.
+7. **Results.** "Victory" / "Defeat" / "A draw" with the scores, then within a few seconds **"✓ Settled onchain: the contract checked the revealed salt, redrew the pool and checked all 40 moves."** **Show N transactions** lists `create_match (VRF draw)`, the `play` transactions (Basalt's are its own), and `settle (salt revealed)` on nearblocks. Below: **Verify in this browser** (reads the match from the contract through a public NEAR RPC and replays it here with packages/rules: the same checks as the CLI, each with a ✓), the exact `pnpm verify <id> --host …` command and a **proof bundle (JSON)** link.
 8. **Check it yourself**, with no keys and without trusting our server:
 
    ```
-   pnpm verify <matchId>                                  # local server
-   pnpm verify <matchId> --host https://<hosted-url>      # hosted
+   pnpm install
+   pnpm verify em5cqa --host https://kraterra.lopeselio.online   # a hosted match (output below)
+   pnpm verify <matchId>                                          # a match on your local server
    ```
 
-   Example from a live testnet match below.
+   It reads the contract through public testnet RPCs (intea, drpc, then fastnear), retries rate-limited (429) rounds, and says plainly if every RPC refused; `--rpc <url>` picks one.
 9. **Challenge a friend.** Press it: you get a 6-character code and a `/m/<code>` link (Copy / Share). Your friend opens it, types a name, presses **Accept the duel** (no wallet needed); the draw and the draft start for both. If the player whose turn it is goes idle for 3 minutes, the other gets **claim the win**.
-10. **Sign in with NEAR** (top right; NEAR Connect: Meteor, Intear, HOT, MyNearWallet, …). The wallet signs "Sign in to <host>" (NEP-413). In *Munition packs*, **Claim your starter pack (free, gasless)**: a NEP-366 meta-transaction paid by `kraterra-relay.testnet` mints an NFT pack (Starfall, Tidebreaker or Auger, picked by the block's VRF) shown as its onchain SVG crate. Its munition now appears in your drafts; the contract checks you still own the pack when the match is created. Your record (duels, wins, best score, damage) is kept onchain.
+10. **Sign in with NEAR** (top right; NEAR Connect: Meteor, Intear, HOT, MyNearWallet, …). The wallet signs "Sign in to <host>" (NEP-413). In *Munition packs*, **Claim your starter pack (free, gasless)**: a NEP-366 meta-transaction paid by `kraterra-relay.testnet` mints an NFT pack (Starfall, Tidebreaker or Auger, picked by the block's VRF) shown as its onchain SVG crate. Its munition now appears in your drafts; the contract checks you still own the pack when the match is created. **Give…** under a pack sends it to another account (your wallet signs `nft_transfer`, 1 yoctoNEAR as NEP-171 asks; not gasless). Your record (duels, wins, best score, damage) is kept onchain.
 11. **Headless:** `pnpm e2e` (server at http://localhost:8841) creates a faucet account, signs in, claims a starter pack gaslessly, duels Basalt on Normal over HTTP (drafting the pack munition), waits for every move and the settlement onchain, and compares the contract's record.
 
 ### A live run (hosted, testnet, 10 Nov 2026)
 
-`pnpm e2e https://kraterra.orangehill-dc994ea2.northeurope.azurecontainerapps.io` (the faucet was rate-limiting, so the test account is a funded sub-account; the 40 `play` lines are left out):
+`pnpm e2e <hosted URL>`, run against the same deployment through its Azure hostname before the custom domain was bound (the faucet was rate-limiting, so the test account is a funded sub-account; the 40 `play` lines are left out):
 
 ```
 ▶ sign in: Better Auth + better-near-auth (the wallet signs "Sign in to <host>")
@@ -69,7 +83,7 @@ With no NEAR keys, run `CHAIN=0 pnpm start`: everything plays the same, but noth
   ✓ your record onchain: 1 match, 1 win(s), 144 damage
 ```
 
-`pnpm verify em5cqa --host https://kraterra.orangehill-dc994ea2.northeurope.azurecontainerapps.io`:
+`pnpm verify em5cqa --host https://kraterra.lopeselio.online` (run again 12 Nov 2026):
 
 ```
 match em5cqa on kraterra.testnet: E2E Gunner vs Basalt (vs Basalt on normal)
@@ -93,7 +107,7 @@ match em5cqa on kraterra.testnet: E2E Gunner vs Basalt (vs Basalt on normal)
 all checks passed
 ```
 
-An earlier local run, `pnpm verify 4fgnan` (Archipelago, 108 – 94), passes the same checks.
+A guest duel from a judge rehearsal, `pnpm verify vcuuk6 --host https://kraterra.lopeselio.online` (Archipelago, Basalt 50 – 0), passes the same checks, and so does **Verify in this browser** on https://kraterra.lopeselio.online/m/vcuuk6. The leaderboard so far is Basalt and test accounts: guests' duels are settled onchain but only signed-in accounts get a record.
 
 ## How it works
 
@@ -143,7 +157,7 @@ pnpm sim 20 hard easy                # all-AI balance: wins per difficulty, mean
 ## Lineage and disclosures
 
 - **Genre.** Turn-based artillery duels (Pocket Tanks, Scorched Earth, Worms). Kraterra copies **no names, art, sounds or weapon list** from any of them; its munitions, rules, world and onchain scheme are its own.
-- **Other projects.** Independent of our other NEAR HACKATHON games (Bazaar of Liars, Realm Ledger, Parkwright, Sushi Sabotage, Fogwater, Emberfall): its own repo, contract, rules and server. It reuses the same stack and sign-in pattern (Better Auth + better-near-auth, a gasless relayer) and sits beside them in the NEAR Arcade.
+- **The NEAR Arcade.** One of nine games in the author's NEAR Arcade submission (https://arcade.lopeselio.online): Sushi Sabotage, Bazaar of Liars, Realm Ledger, Parkwright, Fogwater, Emberfall, Inside Job, Kraterra and Clawtide. Each has its own repo, contract, rules and server; Kraterra reuses the arcade's common stack and sign-in pattern (Better Auth + better-near-auth, a gasless relayer). The author's other NEAR HACKATHON submission is Signalfire.
 - **AI.** NEAR AI Cloud only voices Basalt's taunts. The model never aims, picks or decides anything.
 - **Libraries:** three.js, React, better-auth and better-near-auth, near-api-js, near-kit, @noble/hashes, ws, Vite, near-sdk (Rust).
 - **Assets:** every model is procedural boxes (`apps/web/src/scene.ts`); every sound is synthesised (`apps/web/src/sound.ts`); fonts are Inter and Pixelify Sans (Google Fonts, OFL).
