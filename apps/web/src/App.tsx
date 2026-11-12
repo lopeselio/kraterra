@@ -170,6 +170,7 @@ function Title({ bf, cfg, account, onPlay, onFriend, onJoin, onPractice, onTour 
   const [me, setMe] = useState<Me | null>(null);
   const [board, setBoard] = useState<[string, { wins: number; matches: number; damage: number }][]>([]);
   const [recent, setRecent] = useState<Summary[]>([]);
+  const [counts, setCounts] = useState<{ contractStarted: number; started: number; settled: number; resigned: number; unfinished: number } | null>(null);
   const [claim, setClaim] = useState<{ busy: boolean; msg: string | null }>({ busy: false, msg: null });
   const fresh = !onboarded().walked;
 
@@ -178,6 +179,7 @@ function Title({ bf, cfg, account, onPlay, onFriend, onJoin, onPractice, onTour 
   useEffect(() => {
     void api<typeof board>('/leaderboard').then(setBoard).catch(() => undefined);
     void api<Summary[]>('/recent').then(setRecent).catch(() => undefined);
+    void api<typeof counts>('/stats').then(setCounts).catch(() => undefined);
   }, []);
   const saveName = (n: string): void => { setNm(n); setName(n); };
 
@@ -250,6 +252,7 @@ function Title({ bf, cfg, account, onPlay, onFriend, onJoin, onPractice, onTour 
         </section>
         <section className="panel">
           <h2>Recent duels</h2>
+          {counts && <p className="dim small" title="Read from kraterra.testnet: get_match for each duel started here, get_config for the contract's counter">On the contract: <b>{counts.settled}</b> duel{counts.settled === 1 ? '' : 's'} from this site settled (every move checked), {counts.resigned} resigned, {counts.unfinished} unfinished. Its counter shows {counts.contractStarted} started in all, test runs included.</p>}
           {recent.length === 0 ? <p className="dim small">None yet.</p> : (
             <ul className="recent">{recent.slice(0, 6).map((m) => (
               <li key={m.id}><a href={`/m/${m.id}`}>{m.names[0]} <b>{m.scores[0]}–{m.scores[1]}</b> {m.names[1]}</a> <small className="dim">{m.settled ? '✓ settled' : '…'} · <code>{m.id}</code></small></li>
