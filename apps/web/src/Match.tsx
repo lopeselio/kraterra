@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  PICKS, SHOTS, THEME_NAMES, aiPick, applyMove, cloneState, encodeGrid, fromWire, parseMove, previewDrive, rngFrom, shotText, weapon, type State,
+  PICKS, SHOTS, THEME_NAMES, aiPick, applyMove, cloneState, encodeGrid, fromWire, parseMove, previewDrive, rngFrom, shotText, verifyMatch, viewCall, weapon,
+  type ChainMatch, type ProofBundle, type State, type VerifyLine,
 } from '@kraterra/rules';
 import { api, getName, getSeat, putSeat, setName, watch, type MatchView } from './api.ts';
 import { AimPanel, WeaponCard, WeaponIcon, WindBadge, type Aim } from './Controls.tsx';
@@ -288,6 +289,7 @@ function Results({ view, s, me, onHome, onRematch }: { view: MatchView; s: State
           </ul>
         )}
         <p className="small">Check it yourself, no keys: <code>pnpm verify {view.id}{location.hostname === 'localhost' ? '' : ` --host ${location.origin}`}</code> · <a href={`/api/matches/${view.id}/proof`} target="_blank" rel="noreferrer">proof bundle (JSON)</a></p>
+        {view.chain.settled && <BrowserVerify id={view.id} contract={view.chain.contract} />}
         {view.salt && <p className="tiny dim">salt {short(view.salt)} · vrf {short(view.vrf)} · seed {short(view.seed)}</p>}
       </div>
       <div className="row center-row">
@@ -295,6 +297,33 @@ function Results({ view, s, me, onHome, onRematch }: { view: MatchView; s: State
         <button className="ghost" onClick={onHome}>Home</button>
       </div>
       {s && me !== null && <p className="tiny dim">Your arsenal: {s.inv[me].map((id) => weapon(id).name).join(', ')}</p>}
+    </div>
+  );
+}
+
+/** The same checks as `pnpm verify`, run here: the proof bundle against the contract (read from a public RPC), and a full replay. */
+function BrowserVerify({ id, contract }: { id: string; contract: string }) {
+  const [out, setOut] = useState<{ lines: VerifyLine[]; failed: number } | null>(null);
+  const [state, setState] = useState<'idle' | 'running' | 'error'>('idle');
+  const [msg, setMsg] = useState('');
+  const run = async (): Promise<void> => {
+    setState('running'); setOut(null);
+    try {
+      const b = await api<ProofBundle>(`/matches/${id}/proof`);
+      const c = await viewCall<ChainMatch | null>(contract, 'get_match', { match_id: id });
+      setOut(verifyMatch(id, b, c)); setState('idle');
+    } catch (e) { setMsg((e as Error).message); setState('error'); }
+  };
+  return (
+    <div className="bverify">
+      <button className="linkish" disabled={state === 'running'} onClick={() => void run()}>{state === 'running' ? 'Checking against the contract…' : out ? 'Verify again' : 'Verify in this browser'}</button>
+      {state === 'error' && <p className="err small">{msg}</p>}
+      {out && (
+        <>
+          <ul className="vlines">{out.lines.map((l, i) => <li key={i} className={l.ok === false ? 'err' : l.ok ? '' : 'dim'}>{l.ok === undefined ? l.what.trim() : `${l.ok ? '✓' : '✗'} ${l.what}`}{l.detail ? <code> {l.detail}</code> : null}</li>)}</ul>
+          <p className={out.failed ? 'err small' : 'ok small'}>{out.failed ? `${out.failed} check(s) failed` : 'All checks passed: read from the NEAR RPC and replayed here with packages/rules.'}</p>
+        </>
+      )}
     </div>
   );
 }
