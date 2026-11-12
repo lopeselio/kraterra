@@ -203,6 +203,9 @@ input[type=range] { flex: 1; min-width: 40px; accent-color: var(--gold); height:
 .wrow small { color: var(--dim); }
 
 /* ---------- phones ---------- */
+@media (pointer: coarse) {
+  .topbar button, button.resign { min-height: 40px; min-width: 40px; padding: 8px 11px; white-space: nowrap; }
+}
 @media (max-width: 720px) {
   .wide-only { display: none; }
   .twocol { grid-template-columns: 1fr; }
