@@ -172,6 +172,9 @@ input[type=range] { flex: 1; min-width: 40px; accent-color: var(--gold); height:
 .onchain { text-align: left; background: rgba(0, 0, 0, .25); border-radius: 10px; padding: 10px 12px; margin: 10px 0; font-size: 13px; }
 .onchain p { margin: 4px 0; }
 .txs { margin: 6px 0; padding-left: 18px; }
+.vlines { list-style: none; margin: 6px 0; padding: 0; font-size: 12px; max-height: 180px; overflow-y: auto; }
+.vlines li { margin: 2px 0; overflow-wrap: anywhere; }
+.vlines code { opacity: .7; }
 .center-row { justify-content: center; }
 
 /* onboarding */
