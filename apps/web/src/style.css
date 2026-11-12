@@ -1,5 +1,6 @@
 :root {
   --bg: #0d1220; --ink: #f2f5ff; --dim: #9fadc8; --line: rgba(190, 210, 255, .18); --card: rgba(12, 18, 32, .84);
+  --num: 'Inter', system-ui, sans-serif; /* numerals: in Pixelify Sans a 5 reads as an 8 */
   --gold: #ffcf5a; --teal: #35d6c8; --orange: #ff8a3d; --mint: #6dffb0; --red: #ff7a6a;
   --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-l: env(safe-area-inset-left, 0px); --safe-r: env(safe-area-inset-right, 0px);
@@ -79,7 +80,7 @@ kbd { font: 700 11px ui-monospace, monospace; border: 1px solid var(--line); bor
 .top-hud { position: absolute; top: calc(52px + var(--safe-t)); left: 50%; transform: translateX(-50%); width: min(620px, calc(100% - 24px)); text-align: center; padding: 8px 12px; }
 .vs { display: flex; gap: 8px; align-items: baseline; justify-content: center; flex-wrap: wrap; }
 .vs .who { font-weight: 800; font-size: 14px; max-width: 34vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vs .score { font: 700 22px 'Pixelify Sans', monospace; }
+.vs .score { font: 800 22px var(--num); font-variant-numeric: tabular-nums; }
 .vs .sep { color: var(--dim); }
 .chainchip { font: 600 11px ui-monospace, monospace; color: var(--mint); background: rgba(0, 0, 0, .3); border: 1px solid rgba(120, 230, 190, .35); border-radius: 999px; padding: 2px 8px; text-decoration: none; white-space: nowrap; }
 .chainchip.off { color: var(--dim); border-color: rgba(255, 255, 255, .15); }
@@ -101,7 +102,7 @@ kbd { font: 700 11px ui-monospace, monospace; border: 1px solid var(--line); bor
 .center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(520px, calc(100% - 24px)); max-height: calc(100% - 140px - var(--safe-t)); overflow: auto; text-align: center; }
 .center h2 { font: 700 24px 'Pixelify Sans', monospace; margin: 4px 0 8px; }
 .center .row { justify-content: center; }
-.code { font: 700 40px 'Pixelify Sans', monospace; letter-spacing: 8px; color: var(--gold); margin: 6px 0 10px; }
+.code { font: 800 40px var(--num); font-variant-numeric: tabular-nums; letter-spacing: 8px; color: var(--gold); margin: 6px 0 10px; }
 .chainsteps { text-align: left; display: grid; gap: 6px; padding-left: 20px; font-size: 14px; }
 .chainsteps li.done::marker { color: var(--mint); }
 .chainsteps li.on { color: var(--gold); }
@@ -122,7 +123,7 @@ kbd { font: 700 11px ui-monospace, monospace; border: 1px solid var(--line); bor
 .slider { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .slider-top { display: flex; justify-content: space-between; align-items: baseline; padding: 0 4px; }
 .slider-top small { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
-.slider-top b { font: 700 18px 'Pixelify Sans', monospace; }
+.slider-top b { font: 800 18px var(--num); font-variant-numeric: tabular-nums; }
 .slider-row { display: flex; gap: 4px; align-items: center; }
 .nudge { min-width: 40px; min-height: 40px; padding: 0; font-size: 20px; }
 input[type=range] { flex: 1; min-width: 40px; accent-color: var(--gold); height: 34px; padding: 0; border: 0; background: transparent; }
@@ -170,7 +171,7 @@ input[type=range] { flex: 1; min-width: 40px; accent-color: var(--gold); height:
 /* results */
 .results h2.win { color: var(--gold); }
 .results .big { font-size: 18px; }
-.results .big b { font: 700 28px 'Pixelify Sans', monospace; }
+.results .big b { font: 800 28px var(--num); font-variant-numeric: tabular-nums; }
 .onchain { text-align: left; background: rgba(0, 0, 0, .25); border-radius: 10px; padding: 10px 12px; margin: 10px 0; font-size: 13px; }
 .onchain p { margin: 4px 0; }
 .txs { margin: 6px 0; padding-left: 18px; }
