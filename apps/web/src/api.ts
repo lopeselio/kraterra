@@ -15,7 +15,7 @@ export async function api<T>(path: string, body?: unknown, token?: string): Prom
 export interface ServerConfig { network: string; contract: string; referee: string; chain: boolean; relayer: string | null; nearAi: boolean; ai: string | null }
 export interface PackToken { token_id: string; owner_id: string; metadata: { title: string; description: string; media: string; extra: string } }
 export interface Stats { matches: number; wins: number; losses: number; draws: number; best: number; damage: number }
-export interface Me { accountId: string; packs: PackToken[]; starter: boolean; stats: Stats | null }
+export interface Me { accountId: string | null; packs: PackToken[]; starter: boolean; stats: Stats | null }
 export interface SeatView { kind: 'account' | 'guest' | 'ai'; name: string; account: string | null; packs: string[]; kinds: number[] }
 export interface MatchView {
   id: string; mode: 'ai' | 'friend'; difficulty: Difficulty; you: number | null;
