@@ -82,7 +82,9 @@ export function AimPanel(props: {
           {cur !== undefined && <WeaponIcon id={cur} size={30} />}
           <span><b>{cur !== undefined ? weapon(cur).name : '—'}</b><small>{inv.filter((_, i) => !used[i]).length} left · change ▴</small></span>
         </button>
-        <Slider label="Angle" unit="°" value={aim.angle} min={0} max={180} reverse onChange={(v) => set({ angle: v })} onNudge={(d) => nudge('angle', -d)} disabled={busy} />
+        <Slider label="Angle" unit="°" value={aim.angle} min={0} max={180} reverse onChange={(v) => set({ angle: v })} onNudge={(d) => nudge('angle', -d)} disabled={busy}
+          note={aim.angle === 90 ? 'straight up' : aim.angle < 90 ? 'barrel right ▶' : '◀ barrel left'}
+          nudges={[['◀', 'Turn the barrel left (angle up 1°)'], ['▶', 'Turn the barrel right (angle down 1°)']]} />
         <Slider label="Power" unit="" value={aim.power} min={1} max={100} onChange={(v) => set({ power: v })} onNudge={(d) => nudge('power', d)} disabled={busy} />
         {props.allowMove !== false && (
           <div className="drive">
@@ -113,17 +115,25 @@ export function AimPanel(props: {
   );
 }
 
-function Slider({ label, unit, value, min, max, onChange, onNudge, disabled, reverse }: { label: string; unit: string; value: number; min: number; max: number; onChange: (v: number) => void; onNudge: (d: number) => void; disabled?: boolean; reverse?: boolean }) {
-  // the angle slider runs right-to-left so dragging right lowers the barrel toward the right
+function Slider({ label, unit, value, min, max, onChange, onNudge, disabled, reverse, note, nudges }: {
+  label: string; unit: string; value: number; min: number; max: number; onChange: (v: number) => void; onNudge: (d: number) => void; disabled?: boolean; reverse?: boolean;
+  /** shown beside the number (which way the barrel points) */
+  note?: string;
+  /** glyph and accessible name of the two nudge buttons, left then right; − / + "down" / "up" by default */
+  nudges?: [[string, string], [string, string]];
+}) {
+  // The angle slider runs right-to-left so the barrel follows the drag: 180° (flat left) at the left end,
+  // 0° (flat right) at the right end. Its buttons are therefore named by what the barrel does, not − / +.
   const shown = reverse ? max + min - value : value;
+  const [lo, hi] = nudges ?? [['−', `${label} down`], ['+', `${label} up`]];
   return (
     <div className="slider">
-      <div className="slider-top"><small>{label}</small><b>{value}{unit}</b></div>
+      <div className="slider-top"><small>{label}{note ? <i className="slider-note"> · {note}</i> : null}</small><b>{value}{unit}</b></div>
       <div className="slider-row">
-        <button className="ghost nudge" onClick={() => onNudge(-1)} disabled={disabled} aria-label={`${label} down`}>−</button>
-        <input type="range" min={min} max={max} value={shown} disabled={disabled} aria-label={label}
+        <button className="ghost nudge" onClick={() => onNudge(-1)} disabled={disabled} aria-label={lo[1]} title={lo[1]}>{lo[0]}</button>
+        <input type="range" min={min} max={max} value={shown} disabled={disabled} aria-label={label} aria-valuetext={`${value}${unit}${note ? `, ${note}` : ''}`}
           onChange={(e) => { const v = Number(e.target.value); onChange(reverse ? max + min - v : v); }} />
-        <button className="ghost nudge" onClick={() => onNudge(1)} disabled={disabled} aria-label={`${label} up`}>+</button>
+        <button className="ghost nudge" onClick={() => onNudge(1)} disabled={disabled} aria-label={hi[1]} title={hi[1]}>{hi[0]}</button>
       </div>
     </div>
   );
