@@ -209,15 +209,23 @@ function Draft({ s, view, me, myTurn, sending, onPick }: { s: State; view: Match
   const mine = me ?? 0;
   const names = view.seats.map((x) => x?.name ?? '');
   const turnName = names[s.moves.length % 2];
+  // "Draft for me" fills the rest of your hand: Basalt's own drafting brain picks on each of your turns
+  const [auto, setAuto] = useState(false);
+  const picks = s.moves.length;
+  useEffect(() => {
+    if (!auto || !myTurn || sending) return;
+    const t = setTimeout(() => onPick(aiPick(s, mine, 'hard', rngFrom(String(Math.random())))), 350);
+    return () => clearTimeout(t);
+  }, [auto, myTurn, sending, picks]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="draft card" onPointerDown={(e) => e.stopPropagation()}>
       <div className="draft-head">
         <b>The draft</b>
         <span className={myTurn ? 'go' : 'dim'}>{myTurn ? 'Your pick' : `${turnName} is picking…`}</span>
         <span className="grow" />
-        {myTurn && <button className="ghost small" disabled={sending} onClick={() => onPick(aiPick(s, mine, 'hard', rngFrom(String(Math.random()))))}>Pick for me</button>}
+        {me !== null && <button className={auto ? 'small' : 'ghost small'} onClick={() => setAuto(!auto)}>{auto ? 'Stop drafting for me' : 'Draft for me'}</button>}
       </div>
-      <p className="dim small">Take turns until you each hold 10. Every munition fires once. Tap a card.</p>
+      <p className="dim small">Take turns until you each hold 10. Every munition fires once. Tap a card, or <b>Draft for me</b> to fill your hand.</p>
       {me !== null && s.seats[me].rares.length > 0 && (
         <>
           <div className="draft-label">Your NFT packs</div>
