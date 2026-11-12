@@ -131,6 +131,7 @@ export function Match({ id, bf, onHome, onRematch }: { id: string; bf: Battlefie
           {inBattle && <span>Shot {Math.min(SHOTS, shotN + 1)}/{SHOTS}</span>}
           {inBattle && <WindBadge wind={s!.wind} />}
           {view.mode === 'ai' && <span className="dim">Basalt · {view.difficulty}</span>}
+          <ChainChip view={view} />
         </div>
       </div>
 
@@ -184,6 +185,19 @@ function Lobby({ view, seat, onJoined }: { view: MatchView; seat: { seat: number
       <p className="dim small">Waiting for your friend…</p>
     </div>
   );
+}
+
+/** Stays on screen the whole duel: the VRF value the contract drew, linked to its create_match transaction. */
+function ChainChip({ view }: { view: MatchView }) {
+  if (!view.chain.enabled) return <span className="chainchip off" title="CHAIN=0: nothing is written onchain">offline</span>;
+  if (!view.vrf) return null;
+  const create = view.chain.txs.find((t) => t.what.startsWith('create_match'));
+  const moves = view.chain.txs.filter((t) => t.what.startsWith('play')).length;
+  const label = <>⛓ VRF {view.vrf.slice(0, 8)}{moves ? ` · ${moves} onchain` : ''}</>;
+  const title = `NEAR contract ${view.chain.contract} drew this battlefield's VRF seed ${view.vrf.slice(0, 16)}… after the salt hash was committed. Every pick and shot is recorded there.`;
+  return create
+    ? <a className="chainchip" href={create.url} target="_blank" rel="noreferrer" title={title} onPointerDown={(e) => e.stopPropagation()}>{label}</a>
+    : <span className="chainchip" title={title}>{label}</span>;
 }
 
 function Drawing({ view }: { view: MatchView }) {
