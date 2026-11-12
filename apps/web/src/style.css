@@ -235,3 +235,7 @@ input[type=range] { flex: 1; min-width: 40px; accent-color: var(--gold); height:
   .hero { padding: 2vh 0 10vh; }
   .center { max-height: calc(100% - 60px); top: calc(50% + 20px); }
 }
+
+.give { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.give label { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.give p { flex-basis: 100%; margin: 2px 0; }

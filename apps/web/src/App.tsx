@@ -9,7 +9,7 @@ import { Practice } from './Practice.tsx';
 import { Battlefield } from './scene.ts';
 import { isMuted, setMuted, unlockAudio } from './sound.ts';
 import { HowToPlay, Walkthrough } from './Walkthrough.tsx';
-import { call, setContract, signIn, signOut } from './wallet.ts';
+import { call, givePack, setContract, signIn, signOut } from './wallet.ts';
 
 // The shell: one three.js battlefield behind everything; the title screen, the practice range and
 // matches on top. Routes: / (title), /practice, /m/<id> (a match; the link you send a friend).
@@ -183,6 +183,21 @@ function Title({ bf, cfg, account, onPlay, onFriend, onJoin, onPractice, onTour 
   }, []);
   const saveName = (n: string): void => { setNm(n); setName(n); };
 
+  // giving a pack away: the munition goes with it (create_match checks who owns the pack)
+  const [give, setGive] = useState<{ token: string; to: string; busy: boolean; msg: string | null } | null>(null);
+  const sendPack = async (): Promise<void> => {
+    if (!give) return;
+    const to = give.to.trim().toLowerCase();
+    if (!/^(([a-z\d]+[-_])*[a-z\d]+\.)*([a-z\d]+[-_])*[a-z\d]+$/.test(to) || to.length < 2 || to.length > 64) { setGive({ ...give, msg: 'That isn’t a NEAR account id.' }); return; }
+    if (to === account) { setGive({ ...give, msg: 'That’s you.' }); return; }
+    setGive({ ...give, busy: true, msg: null });
+    try {
+      const tx = await givePack(give.token, to);
+      setGive({ ...give, busy: false, msg: `Sent to ${to}${tx ? ` (tx ${tx.slice(0, 8)}…)` : ''}.` });
+      setTimeout(loadMe, 2500);
+    } catch (e) { setGive({ ...give, busy: false, msg: (e as Error).message }); }
+  };
+
   const claimStarter = async (): Promise<void> => {
     setClaim({ busy: true, msg: null });
     try {
@@ -227,13 +242,23 @@ function Title({ bf, cfg, account, onPlay, onFriend, onJoin, onPractice, onTour 
       <section className="panel">
         <h2>Munition packs</h2>
         {!account ? (
-          <p className="dim">Guests play everything. <b>Sign in with NEAR</b> (top right) to claim a free starter pack: an NFT in your wallet that adds a rare munition (Starfall, Tidebreaker or Auger) to your draft, and to keep your record onchain.</p>
+          <p className="dim">Guests play everything. <b>Sign in with NEAR</b> (top right) to claim a free starter pack: an NFT in your wallet that adds a rare munition (Starfall, Tidebreaker or Auger) to your draft, and to keep your record onchain. One free pack per account, its kind drawn by the block’s VRF: in the game, the other two kinds only come from other players.</p>
         ) : (
           <>
             {me && me.packs.length > 0 && (
               <div className="packs">
-                {me.packs.map((p) => <figure key={p.token_id}><img src={p.metadata.media} alt="" width={72} height={72} /><figcaption>{p.metadata.title}<small>{p.token_id}</small></figcaption></figure>)}
+                {me.packs.map((p) => <figure key={p.token_id}><img src={p.metadata.media} alt="" width={72} height={72} /><figcaption>{p.metadata.title}<small>{p.token_id}</small></figcaption>
+                  <button className="linkish small" onClick={() => setGive({ token: p.token_id, to: '', busy: false, msg: null })}>Give…</button></figure>)}
               </div>
+            )}
+            {give && (
+              <form className="give" onSubmit={(e) => { e.preventDefault(); void sendPack(); }}>
+                <label className="small">Give {give.token} to <input value={give.to} onChange={(e) => setGive({ ...give, to: e.target.value, msg: null })} placeholder="friend.testnet" aria-label="Receiving NEAR account" autoFocus /></label>
+                <button disabled={give.busy || !give.to.trim()}>{give.busy ? 'Waiting for your wallet…' : 'Send pack'}</button>
+                <button type="button" className="ghost" onClick={() => setGive(null)}>Close</button>
+                <p className="dim small">Its munition goes with it: from their next duel, they can draft it and you can’t. Your wallet signs an <code>nft_transfer</code> (1 yoctoNEAR, as NEP-171 asks).</p>
+                {give.msg && <p className="small">{give.msg}</p>}
+              </form>
             )}
             {me && !me.starter && <button disabled={claim.busy || !cfg?.chain} onClick={() => void claimStarter()}>{claim.busy ? 'Waiting for your wallet…' : 'Claim your starter pack (free, gasless)'}</button>}
             {me && me.packs.length === 0 && me.starter && <p className="dim small">Your starter pack has moved to another wallet.</p>}
