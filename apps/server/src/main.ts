@@ -98,7 +98,8 @@ async function route(req: IncomingMessage, res: ServerResponse): Promise<void> {
       });
     }
     if (p === '/api/me') {
-      if (!me) return json(res, 401, { error: 'not signed in' });
+      // a guest is a normal answer, not an error (no 401 in a guest's console)
+      if (!me) return json(res, 200, { accountId: null, packs: [], starter: false, stats: null });
       const chain = config.chainEnabled;
       const [packs, starter, stats] = await Promise.all([
         chain ? view('nft_tokens_for_owner', { account_id: me, from_index: null, limit: 50 }).catch(() => []) : [],
