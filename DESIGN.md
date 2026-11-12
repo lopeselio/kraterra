@@ -81,9 +81,12 @@ settle(id, salt, scores)                  ─▶  sha256(salt) = commit; seed; r
 - **What the contract does not do:** run the ballistics (too heavy for gas, and it doesn't need to: the inputs are
   fixed onchain and the physics is deterministic). The score the referee reports at `settle` is checked by replaying:
   `pnpm verify <id>` reads the contract's commit, VRF value, seed, pool and move log over public RPC and replays the
-  duel with packages/rules.
+  duel with packages/rules. The checks live in packages/rules/src/verify.ts, so the results card's **Verify in this
+  browser** runs exactly the same ones (RPC list with 429 retries in both).
 - **Munition packs (NEP-171):** `mint_starter()` once per account (gasless through `kraterra-relay.testnet`, NEP-366);
-  its kind (Starfall, Tidebreaker, Auger) comes from the block's random seed. Transferable with `nft_transfer`;
+  its kind (Starfall, Tidebreaker, Auger) comes from the block's random seed. Transferable with `nft_transfer`
+  (the web app's **Give…** sends one from the player's wallet; the rare munition moves with it). That is the whole
+  economy: one free pack per account, the other kinds only from other players, no token;
   metadata is an onchain SVG crate. At `create_match` the contract checks each listed pack is owned by that seat's
   account; those kinds become the seat's rare draft cards.
 - **Stats:** per account (matches, wins, losses, draws, best score, total damage) and a leaderboard.
