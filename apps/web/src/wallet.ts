@@ -83,6 +83,18 @@ export async function call(method: string, args: object): Promise<{ tx: string; 
   }
 }
 
+/**
+ * Give one of your munition packs to another NEAR account (NEP-171 nft_transfer). Sent from the wallet
+ * itself: the standard asks for a 1 yoctoNEAR deposit, which the relayer never attaches.
+ */
+export async function givePack(tokenId: string, receiverId: string): Promise<string> {
+  await ensureWallet();
+  const near = authClient().near;
+  const out = (await near.getNearClient().call(contract, 'nft_transfer', { receiver_id: receiverId, token_id: tokenId, approval_id: null, memo: 'a Kraterra munition pack' }, { gas: '30 Tgas', attachedDeposit: '1 yocto' })) as { transaction?: { hash: string }; status?: { Failure?: unknown } };
+  if (out?.status && 'Failure' in out.status && out.status.Failure) throw new Error(failure(out) ?? 'the transfer failed');
+  return out?.transaction?.hash ?? '';
+}
+
 function failure(outcome: unknown): string | undefined {
   const m = /panicked at[^"]*?: ?([^"\\]+)|Smart contract panicked: ([^"\\]+)/.exec(JSON.stringify(outcome ?? ''));
   return m?.[1] ?? m?.[2];
