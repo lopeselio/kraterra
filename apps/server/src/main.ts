@@ -80,6 +80,24 @@ async function cached<T>(key: string, ms: number, fn: () => Promise<T>): Promise
   return v;
 }
 
+// Duels started vs settled, from the contract itself. get_config's counter counts every create_match
+// (development servers' test runs included); each duel this site created is looked up with get_match
+// (settled and resigned are final, so cached).
+const finalStatus = new Map<string, string>();
+async function duelCounts(): Promise<{ contractStarted: number; started: number; settled: number; resigned: number; unfinished: number }> {
+  const [, , contractStarted] = await view<[string, string, number]>('get_config');
+  const ids = allMatches().filter((m) => m.chain.created).map((m) => m.id);
+  for (const id of ids) {
+    if (finalStatus.has(id)) continue;
+    const c = await view<{ status: string } | null>('get_match', { match_id: id }).catch(() => null);
+    if (c && (c.status === 'settled' || c.status === 'resigned')) finalStatus.set(id, c.status);
+  }
+  const done = ids.map((id) => finalStatus.get(id)).filter(Boolean);
+  const settled = done.filter((s) => s === 'settled').length;
+  const resigned = done.length - settled;
+  return { contractStarted, started: ids.length, settled, resigned, unfinished: ids.length - done.length };
+}
+
 // ---------- routes ----------
 
 async function route(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -109,6 +127,7 @@ async function route(req: IncomingMessage, res: ServerResponse): Promise<void> {
       return json(res, 200, { accountId: me, packs, starter, stats });
     }
     if (p === '/api/leaderboard') return json(res, 200, config.chainEnabled ? await cached('board', 15000, () => view('leaderboard', { limit: 15 })).catch(() => []) : []);
+    if (p === '/api/stats') return json(res, 200, config.chainEnabled ? await cached('stats', 30000, duelCounts).catch(() => null) : null);
     if (p === '/api/attestation') return json(res, 200, await attestation());
     if (p === '/api/recent') {
       const done = allMatches().filter((m) => m.phase === 'over' && m.result?.reason === 'score').sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 12);
