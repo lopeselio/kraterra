@@ -252,7 +252,7 @@ function Title({ bf, cfg, account, onPlay, onFriend, onJoin, onPractice, onTour 
         </section>
         <section className="panel">
           <h2>Recent duels</h2>
-          {counts && <p className="dim small" title="Read from kraterra.testnet: get_match for each duel started here, get_config for the contract's counter">On the contract: <b>{counts.settled}</b> duel{counts.settled === 1 ? '' : 's'} from this site settled (every move checked), {counts.resigned} resigned, {counts.unfinished} unfinished. Its counter shows {counts.contractStarted} started in all, test runs included.</p>}
+          {counts && <p className="dim small" title="Read from kraterra.testnet: get_match for each duel started here, get_config for the contract's counter">On the contract: <b>{counts.settled}</b> duel{counts.settled === 1 ? '' : 's'} from this site settled (every move checked), {counts.resigned} resigned, {counts.unfinished} in play or abandoned. Its counter shows {counts.contractStarted} started in all, test runs included.</p>}
           {recent.length === 0 ? <p className="dim small">None yet.</p> : (
             <ul className="recent">{recent.slice(0, 6).map((m) => (
               <li key={m.id}><a href={`/m/${m.id}`}>{m.names[0]} <b>{m.scores[0]}–{m.scores[1]}</b> {m.names[1]}</a> <small className="dim">{m.settled ? '✓ settled' : '…'} · <code>{m.id}</code></small></li>
