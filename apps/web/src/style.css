@@ -206,6 +206,9 @@ input[type=range] { flex: 1; min-width: 40px; accent-color: var(--gold); height:
 @media (pointer: coarse) {
   .topbar button, button.resign { min-height: 40px; min-width: 40px; padding: 8px 11px; white-space: nowrap; }
 }
+@media (pointer: coarse) and (max-height: 520px) and (orientation: landscape) {
+  .hud .top-hud { top: calc(52px + var(--safe-t)); }
+}
 /* below the dock's full width, Resign sits above the aiming dock instead of under it */
 @media (max-width: 900px) {
   .resign { bottom: calc(108px + var(--safe-b)); }
