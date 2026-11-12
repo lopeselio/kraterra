@@ -2,7 +2,7 @@
 
 - Hackathon rules: https://nearhackathon.com/HACKATHON.md (deadline 2026-11-14 23:59 UTC; repo must stay public).
 - Design source of truth: DESIGN.md. Keep README "do X, see Y" steps current — AI judges run them.
-- Independent of the other NEAR Arcade games (Bazaar of Liars, Realm Ledger, Parkwright, Sushi Sabotage, Fogwater, Emberfall, …): its own repo, contract, rules and server.
+- One of the nine NEAR Arcade games (Sushi Sabotage, Bazaar of Liars, Realm Ledger, Parkwright, Fogwater, Emberfall, Inside Job, Kraterra, Clawtide): its own repo, contract, rules and server. Hosted at https://kraterra.lopeselio.online.
 - Inspired by the artillery-duel genre (Pocket Tanks and friends): no names, art, sounds or weapon list copied. All art is procedural voxels; all sound is synthesised.
 - packages/rules is deterministic and isomorphic (browser + Node): no Math.random, no Date, no DOM, no node: imports, no transcendental maths (sines come from a fixed integer table). Integer positions only (1/4096 voxel). A replay of the move log must reproduce the state hash.
 - packages/rules/src/protocol.ts (salt hash, seed, pool draw, move format, log check) must match contracts/kraterra byte for byte (shared test vector in both test suites).
