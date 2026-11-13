@@ -109,6 +109,68 @@ all checks passed
 
 A guest duel from a judge rehearsal, `pnpm verify vcuuk6 --host https://kraterra.lopeselio.online` (Archipelago, Basalt 50 – 0), passes the same checks, and so does **Verify in this browser** on https://kraterra.lopeselio.online/m/vcuuk6. The leaderboard so far is Basalt and test accounts: guests' duels are settled onchain but only signed-in accounts get a record.
 
+## Built on NEAR
+
+What each NEAR technology does in Kraterra, and where to look. Each GIF is a short loop (12 seconds or less).
+
+| Technology | What Kraterra uses it for | Where to look |
+|---|---|---|
+| NEAR smart contracts (Rust, near-sdk 5.29.1) | matches: the salt commitment, the VRF draw, the move log, settlement with a full log check, per-account stats | [`contracts/kraterra`](contracts/kraterra/src/lib.rs), [`kraterra.testnet`](https://testnet.nearblocks.io/address/kraterra.testnet) |
+| Block VRF randomness (`env::random_seed_array`) | each match's seed, drawn in a later receipt than the server's commitment; the kind of each starter pack | `create_match`, `draw_vrf`, `mint_starter` in [`lib.rs`](contracts/kraterra/src/lib.rs), [`protocol.ts`](packages/rules/src/protocol.ts) |
+| Function-call access keys (agent account) | Basalt, the AI tank, signs its own moves from [`basalt.kraterra.testnet`](https://testnet.nearblocks.io/address/basalt.kraterra.testnet), whose only key can call `play` and `mint_starter` | [`setup-ai.ts`](apps/server/src/setup-ai.ts), [`ai.ts`](packages/rules/src/ai.ts) |
+| NEP-171 NFTs | munition packs: the only way to draft a rare munition; moved with `nft_transfer` (**Give…**) | `nft_*`, `crate_svg` in [`lib.rs`](contracts/kraterra/src/lib.rs) |
+| NEP-413 sign-in, NEP-366 meta-transactions | wallet sign-in (Better Auth + better-near-auth, NEAR Connect) and the gasless starter pack through [`kraterra-relay.testnet`](https://testnet.nearblocks.io/address/kraterra-relay.testnet) | [`apps/web/src/wallet.ts`](apps/web/src/wallet.ts), [`apps/server/src/ba.ts`](apps/server/src/ba.ts) |
+| NEAR AI Cloud | Basalt's taunts, each kept with the TEE's signature; the model never aims or picks | [`apps/server/src/nearai.ts`](apps/server/src/nearai.ts) |
+
+### NEAR's block VRF: a battlefield nobody picks
+
+<img src="media/stack/vrf.gif" alt="Diagram: the referee kraterra-ref.testnet commits the hash of a secret salt with create_match on kraterra.testnet; a later receipt, draw_vrf, reads env::random_seed_array; the match seed sha256(vrf | salt) needs both and gives the battlefield theme, the 20-card munition pool and the wind for every shot." width="100%">
+
+`create_match` stores `sha256(salt)` and the seats' packs, then calls back into the contract: `draw_vrf` runs in a
+later receipt and reads `env::random_seed_array()`, the block's VRF-derived seed ([`lib.rs`](contracts/kraterra/src/lib.rs)).
+The seed is `sha256("kraterra|seed|<vrf>|<salt>")` ([`protocol.ts`](packages/rules/src/protocol.ts)), so the server,
+which committed first, can't steer it, and the contract can't see the salt until `settle`. Terrain, the pool and the
+wind all come from that seed.
+
+### NEAR smart contracts: the move log and settlement
+
+<img src="media/stack/settle.gif" alt="Diagram: the referee and basalt.kraterra.testnet send moves to play on kraterra.testnet, which enforces turn order, phase and spelling and keeps 20 picks and 20 shots onchain; settle reveals the salt and the contract recomputes the seed, redraws the pool and checks every move before recording scores, winner and stats; then pnpm verify em5cqa replays the match and every check passes." width="100%">
+
+Every draft pick and shot goes to `play` in order; the contract enforces turn order, the phase and one canonical
+spelling per move. `settle` reveals the salt; the contract checks it against the commitment, redraws the 20-card
+pool with the same generator as `packages/rules` (a shared test vector) and checks every move with `check_log` before
+it records the result. The contract doesn't run the ballistics: `pnpm verify` and **Verify in this browser** replay the
+duel from the chain with the same checks ([`verify.ts`](packages/rules/src/verify.ts)).
+
+### Basalt, the AI tank: its own account
+
+<img src="media/stack/basalt.gif" alt="Diagram: basalt.kraterra.testnet is a sub-account whose only key is a function-call key for play and mint_starter on kraterra.testnet; its aim comes from packages/rules searching angle and power with the sim's trace, and it signs its own play transactions; NEAR AI Cloud's TEE-hosted model only writes its taunts, such as That tickled. Now take this., and never aims." width="100%">
+
+`pnpm setup:ai` ([`setup-ai.ts`](apps/server/src/setup-ai.ts)) creates `basalt.kraterra.testnet` with one
+function-call key for `play` and `mint_starter`, so it can't move NEAR or call anything else. Basalt aims by searching
+angle × power with the sim's own `trace`, then shakes by difficulty (±7° Easy, ±3° Normal, ±1° Hard;
+[`ai.ts`](packages/rules/src/ai.ts)), and signs its own moves. `Qwen/Qwen3.6-35B-A3B-FP8` on NEAR AI Cloud only writes
+its lines, each kept with the enclave's signature ([`nearai.ts`](apps/server/src/nearai.ts)).
+
+### NFT munition packs: NEP-171, claimed gasless
+
+<img src="media/stack/packs.gif" alt="Diagram: a signed-in player signs a delegate action that kraterra-relay.testnet relays and pays for; mint_starter mints one pack per account, its kind Starfall, Tidebreaker or Auger picked by the block's VRF; create_match checks the seat owns each listed pack and the player can draft its rare munition; Give sends the pack with nft_transfer, and the munition goes with it." width="100%">
+
+After signing in (NEP-413), **Claim your starter pack** sends `mint_starter` as a NEP-366 meta-transaction:
+`kraterra-relay.testnet` pays the gas, relays only to the Kraterra contract and never attaches a deposit
+([`ba.ts`](apps/server/src/ba.ts)). The pack's kind comes from the block's random seed, and its metadata is an onchain
+SVG crate. `create_match` checks that each listed pack belongs to the seat's account, and `settle` refuses a rare the
+seat didn't own. **Give…** has your wallet sign `nft_transfer` (1 yoctoNEAR).
+
+### The rest of the stack
+
+<img src="media/stack/stack.gif" alt="Diagram: apps/web (three.js voxel diorama, React HUD on Vite, Better Auth and NEAR Connect) talks over websockets to apps/server (Node 22: matches, Basalt, the chain queue, the relayer; near-api-js 7 and near-kit), which reads and writes NEAR testnet through public RPCs with failover; packages/rules is shared; it runs as one replica on Azure Container Apps with match records on Azure Files." width="100%">
+
+A React + three.js client ([`apps/web`](apps/web/src/main.tsx)) and a Node 22 server
+([`apps/server`](apps/server/src/main.ts)) in one container on Azure Container Apps. The deterministic rules
+([`packages/rules`](packages/rules/src/index.ts)) run in the browser to animate each move, on the server and in
+`pnpm verify`, and match the contract's protocol byte for byte.
+
 ## How it works
 
 ```
