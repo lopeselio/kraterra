@@ -31,10 +31,24 @@ export async function signIn(): Promise<string> {
       onError: (e: Error) => reject(new Error(e?.message || 'the wallet didn’t sign')),
     }).catch(reject);
   });
-  const r = (await authClient().getSession()) as { data?: { user?: { nearAccount?: { accountId?: string } } } | null };
-  const account = r.data?.user?.nearAccount?.accountId ?? authClient().near.getAccountId();
-  if (!account) throw new Error('Signed in, but no NEAR account came back. Try again.');
-  return account;
+  // the session cookie can land a moment after the wallet's success callback: read it a few times
+  for (let i = 0; i < 4; i++) {
+    const r = (await authClient().getSession().catch(() => null)) as { data?: { user?: { nearAccount?: { accountId?: string } } } | null } | null;
+    const account = r?.data?.user?.nearAccount?.accountId ?? authClient().near.getAccountId();
+    if (account) return account;
+    await new Promise((res) => setTimeout(res, 400 * (i + 1)));
+  }
+  throw new Error('Signed in, but no NEAR account came back. Try again.');
+}
+
+/** A sign-in error in plain words, and whether trying again is likely to help. */
+export function explainSignIn(raw: string): { text: string; retry: boolean } {
+  if (/reject|cancel|closed|denied|user/i.test(raw)) return { text: 'The wallet was closed before it signed. Nothing was sent.', retry: true };
+  if (/popup|blocked/i.test(raw)) return { text: 'Your browser blocked the wallet window. Allow pop-ups for this site, then try again.', retry: true };
+  if (/nonce|expired|stale/i.test(raw)) return { text: 'The sign-in request expired. Try again: it only takes a click.', retry: true };
+  if (/different site|own page|origin/i.test(raw)) return { text: 'Open the game on its own page and sign in there.', retry: false };
+  if (/fetch|network|timeout|429|5\d\d/i.test(raw)) return { text: 'The network hiccuped while checking your signature. Try again.', retry: true };
+  return { text: 'Sign-in didn’t go through. Try again; it usually works the second time.', retry: true };
 }
 
 export async function signOut(): Promise<void> {
