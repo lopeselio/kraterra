@@ -253,3 +253,13 @@ input[type=range] { flex: 1; min-width: 40px; accent-color: var(--gold); height:
 
 .slider-note { font-style: normal; opacity: .8; white-space: nowrap; }
 .slider-top small { white-space: nowrap; }
+
+/* sign-in failure card (same as fogwater) */
+.acct { position: relative; }
+.signin-fail { position: absolute; top: calc(100% + 8px); right: 0; z-index: 50; width: min(320px, 86vw); display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 12px; background: #1b1424; border: 1px solid #ff9b8a; box-shadow: 0 10px 30px rgba(0,0,0,.45); font-size: 13px; line-height: 1.4; text-align: left; animation: signin-in .18s ease-out; }
+.signin-fail b { color: #ff9b8a; }
+.signin-fail-row { display: flex; gap: 8px; margin-top: 2px; }
+.signin-fail details { font-size: 11px; opacity: .7; }
+.signin-fail code { word-break: break-word; }
+@keyframes signin-in { from { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .signin-fail { animation: none; } }
