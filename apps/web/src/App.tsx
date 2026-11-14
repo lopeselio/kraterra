@@ -9,7 +9,7 @@ import { Practice } from './Practice.tsx';
 import { Battlefield } from './scene.ts';
 import { isMuted, setMuted, unlockAudio } from './sound.ts';
 import { HowToPlay, Walkthrough } from './Walkthrough.tsx';
-import { call, givePack, setContract, signIn, signOut } from './wallet.ts';
+import { call, explainSignIn, givePack, setContract, signIn, signOut } from './wallet.ts';
 
 // The shell: one three.js battlefield behind everything; the title screen, the practice range and
 // matches on top. Routes: / (title), /practice, /m/<id> (a match; the link you send a friend).
@@ -123,10 +123,25 @@ function Account({ account, setAccount }: { account: string | null; setAccount: 
       </span>
     );
   }
+  const go = (): void => {
+    setBusy(true); setErr('');
+    signIn().then(setAccount).catch((e: Error) => setErr(e.message || 'unknown error')).finally(() => setBusy(false));
+  };
+  const why = err ? explainSignIn(err) : null;
   return (
     <span className="acct">
-      {err && <span className="err small" title={err}>!</span>}
-      <button className="small" disabled={busy} onClick={() => { setBusy(true); setErr(null); void signIn().then(setAccount).catch((e) => setErr((e as Error).message)).finally(() => setBusy(false)); }}>{busy ? 'Signing in…' : 'Sign in with NEAR'}</button>
+      <button className="small" disabled={busy} onClick={go}>{busy ? 'Waiting for wallet…' : 'Sign in with NEAR'}</button>
+      {why && !busy && (
+        <span className="signin-fail" role="alert">
+          <b>Sign-in didn’t go through</b>
+          <span>{why.text}</span>
+          <span className="signin-fail-row">
+            {why.retry && <button className="small" onClick={go}>Try again</button>}
+            <button className="ghost small" onClick={() => setErr('')}>Dismiss</button>
+          </span>
+          <details><summary>Details</summary><code>{err}</code></details>
+        </span>
+      )}
     </span>
   );
 }
