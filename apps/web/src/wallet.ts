@@ -41,6 +41,9 @@ export async function signIn(): Promise<string> {
   throw new Error('Signed in, but no NEAR account came back. Try again.');
 }
 
+/** True for the error NEAR Connect throws when its wallet picker is closed without choosing a wallet. */
+export const dismissed = (e: unknown): boolean => (e as Error)?.message === 'User rejected';
+
 /** A sign-in error in plain words, and whether trying again is likely to help. */
 export function explainSignIn(raw: string): { text: string; retry: boolean } {
   if (/reject|cancel|closed|denied|user/i.test(raw)) return { text: 'The wallet was closed before it signed. Nothing was sent.', retry: true };
